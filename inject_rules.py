@@ -3,8 +3,11 @@ import os
 
 file_path = "sr_top500_banlist.conf"
 
-# 你的自定义规则块
+# 自定义规则块
 custom_rules = """
+# ==========================================
+# 👇👇👇 自定义规则开始 👇👇👇
+# ==========================================
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/AppleProxy/AppleProxy.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/Duolingo/Duolingo.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/PayPal/PayPal.list,PROXY
@@ -26,6 +29,9 @@ DOMAIN-SUFFIX,binancezh.io,direct
 DOMAIN-SUFFIX,binance.us,Proxy
 # Bitwarden
 DOMAIN-SUFFIX,bitwarden.com,Proxy
+# ==========================================
+# 👆👆👆 自定义规则结束 👆👆👆
+# ==========================================
 """
 
 # 1. 需要在原上游中精准删除的域名列表
