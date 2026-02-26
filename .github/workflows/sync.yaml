@@ -1,0 +1,45 @@
+name: Sync and Inject Custom Rules
+
+on:
+  schedule:
+    # 每天 UTC 时间 08:30 (北京时间早上 6:30) 自动执行
+    - cron: '30 08 * * *'
+  workflow_dispatch: # 允许你随时在网页上手动触发
+
+jobs:
+  update-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout local repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Sync from Upstream
+        run: |
+          # 添加原作者仓库作为上游
+          git remote add upstream https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever.git
+          git fetch upstream
+          # 自动合并上游的 main 分支。如果有冲突，强制使用上游的文件 (-X theirs) 以保持原规则纯净
+          git merge upstream/main -X theirs -m "Auto merge upstream"
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run Injection Script
+        run: python inject_rules.py
+
+      - name: Commit and Push
+        run: |
+          git add sr_top500_banlist.conf
+          # 检查文件是否有变动，如果有变动才执行 commit
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto sync and inject custom rules"
+          # 推送到你自己的仓库
+          git push origin main
