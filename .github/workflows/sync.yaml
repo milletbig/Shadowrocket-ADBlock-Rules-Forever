@@ -12,21 +12,12 @@ jobs:
     steps:
       - name: Checkout local repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+        # 这里不再需要 fetch-depth: 0，默认浅克隆即可，速度更快
 
-      - name: Set up Git
+      - name: Download latest rules from Upstream
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-      - name: Sync from Upstream
-        run: |
-          # 添加原作者仓库作为上游
-          git remote add upstream https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever.git
-          git fetch upstream
-          # 【修改点1】：自动合并上游的 release 分支
-          git merge upstream/release -X theirs -m "Auto merge upstream"
+          # 核心改动：放弃 Git merge，直接下载原作者 release 分支的最新的 Raw 文件覆盖本地
+          wget -O sr_top500_banlist.conf https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/release/sr_top500_banlist.conf
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -38,8 +29,13 @@ jobs:
 
       - name: Commit and Push
         run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
           git add sr_top500_banlist.conf
+          
           # 检查文件是否有变动，如果有变动才执行 commit
           git diff --quiet && git diff --staged --quiet || git commit -m "Auto sync and inject custom rules"
-          # 【修改点2】：推送到你当前所在的活动分支 (通常是你 fork 后的 release 分支)
+          
+          # 推送到你当前所在的活动分支
           git push origin HEAD
