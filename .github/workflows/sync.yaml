@@ -4,7 +4,7 @@ on:
   schedule:
     # 每天 UTC 时间 00:17 (北京时间早上 8:17) 自动执行
     - cron: '17 0 * * *'
-  workflow_dispatch: # 允许你随时在网页上手动触发
+  workflow_dispatch: # 允许随时在网页上手动触发
 
 jobs:
   update-rules:
@@ -12,11 +12,11 @@ jobs:
     steps:
       - name: Checkout local repository
         uses: actions/checkout@v3
-        # 这里不再需要 fetch-depth: 0，默认浅克隆即可，速度更快
+        # 默认浅克隆，速度更快
 
       - name: Download latest rules from Upstream
         run: |
-          # 核心改动：放弃 Git merge，直接下载原作者 release 分支的最新的 Raw 文件覆盖本地
+          # 直接下载原作者 release 分支的最新的 Raw 文件覆盖本地
           wget -O sr_top500_banlist.conf https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/release/sr_top500_banlist.conf
 
       - name: Set up Python
