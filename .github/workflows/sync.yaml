@@ -2,8 +2,8 @@ name: Sync and Inject Custom Rules
 
 on:
   schedule:
-    # 每天 UTC 时间 00:17 (北京时间早上 8:17) 自动执行
-    - cron: '17 0 * * *'
+    # 每天 UTC 时间 00:27 (北京时间早上 8:27) 自动执行
+    - cron: '27 0 * * *'
   workflow_dispatch: # 允许随时在网页上手动触发
 
 jobs:
