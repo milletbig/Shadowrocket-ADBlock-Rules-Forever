@@ -1,5 +1,8 @@
 import re
 import os
+import urllib.request
+import urllib.parse
+import json
 
 file_path = "sr_top500_banlist.conf"
 
@@ -101,3 +104,34 @@ with open(file_path, 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("规则修改并注入成功！")
+
+# ==========================================
+# 4. 发送 PushDeer 通知
+# ==========================================
+def send_pushdeer():
+    pushkey = os.environ.get("PUSHDEER_KEY")
+    if not pushkey:
+        print("未配置 PUSHDEER_KEY 环境变量，跳过发送通知。")
+        return
+    
+    url = "https://api2.pushdeer.com/message/push"
+    # 通知标题和内容
+    data = urllib.parse.urlencode({
+        'pushkey': pushkey,
+        'text': '✅ Shadowrocket 规则同步成功',
+        'desp': '上游规则已拉取，且您的自定义规则已成功注入并更新。'
+    }).encode('utf-8')
+    
+    try:
+        req = urllib.request.Request(url, data=data)
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            if result.get('code') == 0:
+                print("PushDeer 通知发送成功！")
+            else:
+                print(f"PushDeer 通知发送异常: {result}")
+    except Exception as e:
+        print(f"PushDeer 通知发送失败: {e}")
+
+# 执行发送
+send_pushdeer()
