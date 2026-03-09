@@ -2,8 +2,8 @@ name: Sync and Inject Custom Rules
 
 on:
   schedule:
-    # 每天 UTC 时间 00:27 (北京时间早上 8:27) 自动执行
-    - cron: '27 0 * * *'
+    # 每天 UTC 时间 22:27 (北京时间早上 6:27) 自动执行 因为GitHub action的延时，所以提前了时间设定
+    - cron: '27 22 * * *'
   workflow_dispatch: # 允许随时在网页上手动触发
 
 jobs:
