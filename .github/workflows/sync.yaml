@@ -25,6 +25,8 @@ jobs:
           python-version: '3.x'
 
       - name: Run Injection Script
+        env:
+          PUSHDEER_KEY: ${{ secrets.PUSHDEER_KEY }}
         run: python inject_rules.py
 
       - name: Commit and Push
