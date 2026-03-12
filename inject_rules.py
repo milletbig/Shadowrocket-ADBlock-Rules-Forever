@@ -36,7 +36,7 @@ DOMAIN-SUFFIX,bitwarden.com,Proxy
 DOMAIN-SUFFIX,yxyylog.echargenet.com,REJECT
 DOMAIN-SUFFIX,flytechtj.com,REJECT
 DOMAIN-SUFFIX,puata.info,REJECT
-
+IP-CIDR,140.207.47.36/32,REJECT,no-resolve
 # ==========================================
 # 👆👆👆 自定义规则结束 👆👆👆
 # ==========================================
