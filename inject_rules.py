@@ -100,7 +100,7 @@ else:
 # ==========================================
 content = re.sub(
     r'(hostname\s*=\s*.*?\*\.googlevideo\.com)', 
-    r'\1,*.ddgksf2013.top,*.echargenet.com', 
+    r'\1,*.ddgksf2013.top', 
     content, 
     flags=re.IGNORECASE
 )
