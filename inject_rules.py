@@ -32,6 +32,9 @@ DOMAIN-SUFFIX,binancezh.io,direct
 DOMAIN-SUFFIX,binance.us,Proxy
 # Bitwarden
 DOMAIN-SUFFIX,bitwarden.com,Proxy
+#测试e充电
+DOMAIN-SUFFIX,flytechtj.com,REJECT
+DOMAIN-SUFFIX,puata.info,REJECT
 # ==========================================
 # 👆👆👆 自定义规则结束 👆👆👆
 # ==========================================
