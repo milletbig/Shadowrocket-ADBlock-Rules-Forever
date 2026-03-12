@@ -6,6 +6,10 @@ on:
     - cron: '29 23 * * *'
   workflow_dispatch: # 允许随时在网页上手动触发
 
+# 强制 GitHub Actions 使用 Node.js 24 运行环境，消除过时警告
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   update-rules:
     runs-on: ubuntu-latest
