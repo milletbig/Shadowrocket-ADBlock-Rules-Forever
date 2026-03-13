@@ -52,7 +52,8 @@ domains_to_remove = [
     "binancezh.biz",
     "binance-cn.com",
     "binance.com",
-    "binancezh.io"
+    "binancezh.io",
+    "binance.us"
 ]
 
 # 2. 需要在原上游中精准删除的其他规则/链接列表
