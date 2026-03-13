@@ -35,7 +35,6 @@ DOMAIN-SUFFIX,bitwarden.com,Proxy
 # e充电 去广告
 DOMAIN-SUFFIX,flytechtj.com,REJECT
 DOMAIN-SUFFIX,puata.info,REJECT
-IP-CIDR,140.207.47.36/32,REJECT,no-resolve
 # e充电 隐私防追踪 & 崩溃日志上报
 DOMAIN-SUFFIX,yxyylog.echargenet.com,REJECT
 DOMAIN-SUFFIX,adash-evone.echargenet.com,REJECT
