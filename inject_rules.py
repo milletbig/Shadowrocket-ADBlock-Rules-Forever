@@ -34,6 +34,11 @@ DOMAIN-SUFFIX,binancezh.io,direct
 DOMAIN-SUFFIX,binance.us,Proxy
 # Bitwarden
 DOMAIN-SUFFIX,bitwarden.com,Proxy
+# APPLE推送服务走代理
+DOMAIN-SUFFIX,push.apple.com
+DOMAIN-SUFFIX,gateway.push.apple.com
+DOMAIN-SUFFIX,api.push.apple.com
+DOMAIN-SUFFIX,sandbox.push.apple.com
 # e充电 去广告
 DOMAIN-SUFFIX,flytechtj.com,REJECT
 DOMAIN-SUFFIX,puata.info,REJECT
