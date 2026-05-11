@@ -5,7 +5,7 @@ import urllib.parse
 import json
 
 # 版本信息
-VERSION = "1.1.001"
+VERSION = "1.1.002"
 file_path = "sr_top500_banlist.conf"
 
 # 自定义规则块
@@ -34,8 +34,10 @@ DOMAIN-SUFFIX,binancezh.biz,DIRECT
 DOMAIN-SUFFIX,binance-cn.com,DIRECT
 DOMAIN-SUFFIX,binance.com,DIRECT
 DOMAIN-SUFFIX,binancezh.io,DIRECT
+
 # 疑似Binance美国域名走代理
 DOMAIN-SUFFIX,binance.us,PROXY
+
 # Bitwarden
 DOMAIN-SUFFIX,bitwarden.com,PROXY
 
@@ -139,11 +141,12 @@ else:
     content = content.replace('[Rule]', '[Rule]\n' + custom_rules.strip() + '\n', 1)
 
 # ==========================================
-# 2.5 统一策略动作大小写 (New in 1.1.001)
+# 2.5 统一策略动作大小写
 # ==========================================
-# 将行尾或逗号后的 Proxy/direct 替换为大写，避免误伤域名中的单词
-content = re.sub(r',\s*Proxy\s*($|\n|#)', r',PROXY\1', content, flags=re.IGNORECASE)
-content = re.sub(r',\s*direct\s*($|\n|#)', r',DIRECT\1', content, flags=re.IGNORECASE)
+# [ \t]* 只匹配空格和制表符，不匹配换行符。
+# (?=\r|\n|$|#) 是前瞻断言，只判断后面是不是换行或注释，但不去替换它们。
+content = re.sub(r',[ \t]*Proxy[ \t]*(?=\r|\n|$|#)', r',PROXY', content, flags=re.IGNORECASE)
+content = re.sub(r',[ \t]*direct[ \t]*(?=\r|\n|$|#)', r',DIRECT', content, flags=re.IGNORECASE)
 
 # ==========================================
 # 3. 追加 MITM hostname
@@ -158,7 +161,7 @@ content = re.sub(
 with open(file_path, 'w', encoding='utf-8') as f:
     f.write(content)
 
-print(f"版本 {VERSION}: 规则修改、注入及大小写规范化成功！")
+print(f"版本 {VERSION}: 规则修改、注入及大小写规范化(已修复换行)成功！")
 
 # ==========================================
 # 4. 发送 PushDeer 通知
@@ -174,7 +177,7 @@ def send_pushdeer():
     data = urllib.parse.urlencode({
         'pushkey': pushkey,
         'text': f'✅ Shadowrocket 规则同步成功 (v{VERSION})',
-        'desp': '上游规则已拉取，且您的自定义规则已注入。'
+        'desp': '上游规则已拉取，且自定义规则已注入。'
     }).encode('utf-8')
     
     try:
