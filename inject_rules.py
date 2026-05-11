@@ -4,6 +4,8 @@ import urllib.request
 import urllib.parse
 import json
 
+# 版本信息
+VERSION = "1.1.001"
 file_path = "sr_top500_banlist.conf"
 
 # 自定义规则块
@@ -22,20 +24,20 @@ RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/hea
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/Notion/Notion.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/TikTok/TikTok.list,PROXY
 RULE-SET,https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/OneDrive/OneDrive.list,PROXY
-RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/Binance/Binance.list,direct
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/Binance/Binance.list,DIRECT
 
 # 疑似Binance域名走直连
-DOMAIN-SUFFIX,binancezh.cc,direct
-DOMAIN-SUFFIX,www.binance.top,direct
-DOMAIN-SUFFIX,binance.org,direct
-DOMAIN-SUFFIX,binancezh.biz,direct
-DOMAIN-SUFFIX,binance-cn.com,direct
-DOMAIN-SUFFIX,binance.com,direct
-DOMAIN-SUFFIX,binancezh.io,direct
+DOMAIN-SUFFIX,binancezh.cc,DIRECT
+DOMAIN-SUFFIX,www.binance.top,DIRECT
+DOMAIN-SUFFIX,binance.org,DIRECT
+DOMAIN-SUFFIX,binancezh.biz,DIRECT
+DOMAIN-SUFFIX,binance-cn.com,DIRECT
+DOMAIN-SUFFIX,binance.com,DIRECT
+DOMAIN-SUFFIX,binancezh.io,DIRECT
 # 疑似Binance美国域名走代理
-DOMAIN-SUFFIX,binance.us,Proxy
+DOMAIN-SUFFIX,binance.us,PROXY
 # Bitwarden
-DOMAIN-SUFFIX,bitwarden.com,Proxy
+DOMAIN-SUFFIX,bitwarden.com,PROXY
 
 # e充电 去广告
 DOMAIN-SUFFIX,flytechtj.com,REJECT
@@ -46,36 +48,36 @@ DOMAIN-SUFFIX,adash-evone.echargenet.com,REJECT
 DOMAIN,pro.bugly.qq.com,REJECT
 
 # Apple Push / APNs
-DOMAIN-SUFFIX,push.apple.com,Proxy
-DOMAIN-SUFFIX,gateway.push.apple.com,Proxy
-DOMAIN-SUFFIX,api.push.apple.com,Proxy
-DOMAIN-SUFFIX,sandbox.push.apple.com,Proxy
+DOMAIN-SUFFIX,push.apple.com,PROXY
+DOMAIN-SUFFIX,gateway.push.apple.com,PROXY
+DOMAIN-SUFFIX,api.push.apple.com,PROXY
+DOMAIN-SUFFIX,sandbox.push.apple.com,PROXY
 
 # Apple Intelligence / Siri / Relay
-DOMAIN-SUFFIX,apple-relay.akamaized.net,Proxy
-DOMAIN-SUFFIX,apple-relay.apple.com,Proxy
-DOMAIN-SUFFIX,apple-relay.cloudflare.com,Proxy
-DOMAIN-SUFFIX,apple-relay.fastly-edge.com,Proxy
-DOMAIN-SUFFIX,apple-relay.mask.apple-dns.net,Proxy
+DOMAIN-SUFFIX,apple-relay.akamaized.net,PROXY
+DOMAIN-SUFFIX,apple-relay.apple.com,PROXY
+DOMAIN-SUFFIX,apple-relay.cloudflare.com,PROXY
+DOMAIN-SUFFIX,apple-relay.fastly-edge.com,PROXY
+DOMAIN-SUFFIX,apple-relay.mask.apple-dns.net,PROXY
 
-# Apple services that may need proxy
-DOMAIN,www-cdn.icloud.com.akadns.net,Proxy
-DOMAIN-SUFFIX,aaplimg.com,Proxy
-DOMAIN-SUFFIX,apple-cloudkit.com,Proxy
-DOMAIN-SUFFIX,apple.co,Proxy
-DOMAIN-SUFFIX,apple.com,Proxy
-DOMAIN-SUFFIX,apple.news,Proxy
-DOMAIN-SUFFIX,appstore.com,Proxy
-DOMAIN-SUFFIX,cdn-apple.com,Proxy
-DOMAIN-SUFFIX,icloud-content.com,Proxy
-DOMAIN-SUFFIX,icloud.com,Proxy
-DOMAIN-SUFFIX,me.com,Proxy
-DOMAIN-SUFFIX,mzstatic.com,Proxy
+# Apple services that may need PROXY
+DOMAIN,www-cdn.icloud.com.akadns.net,PROXY
+DOMAIN-SUFFIX,aaplimg.com,PROXY
+DOMAIN-SUFFIX,apple-cloudkit.com,PROXY
+DOMAIN-SUFFIX,apple.co,PROXY
+DOMAIN-SUFFIX,apple.com,PROXY
+DOMAIN-SUFFIX,apple.news,PROXY
+DOMAIN-SUFFIX,appstore.com,PROXY
+DOMAIN-SUFFIX,cdn-apple.com,PROXY
+DOMAIN-SUFFIX,icloud-content.com,PROXY
+DOMAIN-SUFFIX,icloud.com,PROXY
+DOMAIN-SUFFIX,me.com,PROXY
+DOMAIN-SUFFIX,mzstatic.com,PROXY
 
 # Mainland China Apple services keep direct
-DOMAIN-SUFFIX,apple.com.cn,direct
-DOMAIN-SUFFIX,icloud.com.cn,direct
-DOMAIN,captive.apple.com,direct
+DOMAIN-SUFFIX,apple.com.cn,DIRECT
+DOMAIN-SUFFIX,icloud.com.cn,DIRECT
+DOMAIN,captive.apple.com,DIRECT
 
 # ==========================================
 # 👆👆👆 自定义规则结束 👆👆👆
@@ -115,11 +117,11 @@ for line in lines:
     if not line.strip().startswith('#'):
         # 检查是否命中要删除的 Binance 域名
         if any(f",{domain}," in line for domain in domains_to_remove):
-            continue  # 跳过，不写入新文件
+            continue  
             
         # 检查是否命中要删除的具体 RULE-SET 链接
         if any(rule in line for rule in rules_to_remove):
-            continue  # 跳过，不写入新文件
+            continue  
             
     filtered_lines.append(line)
 
@@ -137,6 +139,13 @@ else:
     content = content.replace('[Rule]', '[Rule]\n' + custom_rules.strip() + '\n', 1)
 
 # ==========================================
+# 2.5 统一策略动作大小写 (New in 1.1.001)
+# ==========================================
+# 将行尾或逗号后的 Proxy/direct 替换为大写，避免误伤域名中的单词
+content = re.sub(r',\s*Proxy\s*($|\n|#)', r',PROXY\1', content, flags=re.IGNORECASE)
+content = re.sub(r',\s*direct\s*($|\n|#)', r',DIRECT\1', content, flags=re.IGNORECASE)
+
+# ==========================================
 # 3. 追加 MITM hostname
 # ==========================================
 content = re.sub(
@@ -149,7 +158,7 @@ content = re.sub(
 with open(file_path, 'w', encoding='utf-8') as f:
     f.write(content)
 
-print("规则修改并注入成功！")
+print(f"版本 {VERSION}: 规则修改、注入及大小写规范化成功！")
 
 # ==========================================
 # 4. 发送 PushDeer 通知
@@ -164,8 +173,8 @@ def send_pushdeer():
     # 通知标题和内容
     data = urllib.parse.urlencode({
         'pushkey': pushkey,
-        'text': '✅ Shadowrocket 规则同步成功',
-        'desp': '上游规则已拉取，且您的自定义规则已成功注入并更新。'
+        'text': f'✅ Shadowrocket 规则同步成功 (v{VERSION})',
+        'desp': '上游规则已拉取，且您的自定义规则已注入。'
     }).encode('utf-8')
     
     try:
