@@ -34,7 +34,6 @@ DOMAIN-SUFFIX,binancezh.biz,DIRECT
 DOMAIN-SUFFIX,binance-cn.com,DIRECT
 DOMAIN-SUFFIX,binance.com,DIRECT
 DOMAIN-SUFFIX,binancezh.io,DIRECT
-
 # 疑似Binance美国域名走代理
 DOMAIN-SUFFIX,binance.us,PROXY
 
@@ -54,14 +53,12 @@ DOMAIN-SUFFIX,push.apple.com,PROXY
 DOMAIN-SUFFIX,gateway.push.apple.com,PROXY
 DOMAIN-SUFFIX,api.push.apple.com,PROXY
 DOMAIN-SUFFIX,sandbox.push.apple.com,PROXY
-
 # Apple Intelligence / Siri / Relay
 DOMAIN-SUFFIX,apple-relay.akamaized.net,PROXY
 DOMAIN-SUFFIX,apple-relay.apple.com,PROXY
 DOMAIN-SUFFIX,apple-relay.cloudflare.com,PROXY
 DOMAIN-SUFFIX,apple-relay.fastly-edge.com,PROXY
 DOMAIN-SUFFIX,apple-relay.mask.apple-dns.net,PROXY
-
 # Apple services that may need PROXY
 DOMAIN,www-cdn.icloud.com.akadns.net,PROXY
 DOMAIN-SUFFIX,aaplimg.com,PROXY
@@ -75,7 +72,6 @@ DOMAIN-SUFFIX,icloud-content.com,PROXY
 DOMAIN-SUFFIX,icloud.com,PROXY
 DOMAIN-SUFFIX,me.com,PROXY
 DOMAIN-SUFFIX,mzstatic.com,PROXY
-
 # Mainland China Apple services keep direct
 DOMAIN-SUFFIX,apple.com.cn,DIRECT
 DOMAIN-SUFFIX,icloud.com.cn,DIRECT
