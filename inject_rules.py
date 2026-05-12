@@ -13,6 +13,13 @@ custom_rules = """
 # ==========================================
 # 👇👇👇 自定义规则开始 👇👇👇
 # ==========================================
+# 拦截 STUN 协议默认端口 (STUN 常用 UDP 3478，TLS STUN 常用 5349)
+DST-PORT,3478,REJECT
+DST-PORT,5349,REJECT
+
+# 拦截主流的 STUN/TURN 服务器特征词
+DOMAIN-KEYWORD,stun,REJECT
+
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/AppleProxy/AppleProxy.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/iCloud/iCloud.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/iCloudPrivateRelay/iCloudPrivateRelay.list,PROXY
