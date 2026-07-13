@@ -72,7 +72,7 @@ DOMAIN,www-cdn.icloud.com.akadns.net,PROXY
 DOMAIN-SUFFIX,aaplimg.com,PROXY
 DOMAIN-SUFFIX,apple-cloudkit.com,PROXY
 DOMAIN-SUFFIX,apple.co,PROXY
-DOMAIN-SUFFIX,apple.com,PROXY
+# DOMAIN-SUFFIX,apple.com,PROXY
 DOMAIN-SUFFIX,apple.news,PROXY
 DOMAIN-SUFFIX,appstore.com,PROXY
 DOMAIN-SUFFIX,cdn-apple.com,PROXY
@@ -99,7 +99,8 @@ domains_to_remove = [
     "binance-cn.com",
     "binance.com",
     "binancezh.io",
-    "binance.us"
+    "binance.us",
+    "gs-loc-cn.apple.com"
 ]
 
 # 2. 需要在原上游中精准删除的其他规则/链接列表
