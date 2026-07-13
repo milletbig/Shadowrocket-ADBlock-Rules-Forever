@@ -157,7 +157,7 @@ content = re.sub(r',[ \t]*direct[ \t]*(?=\r|\n|$|#)', r',DIRECT', content, flags
 # ==========================================
 content = re.sub(
     r'(hostname\s*=\s*.*?\*\.googlevideo\.com)', 
-    r'\1,*.ddgksf2013.top,hub.kelee.one',
+    r'\1,*.ddgksf2013.top,hub.kelee.one,gs-loc.apple.com,gs-loc-cn.apple.com,bluedot.is.autonavi.com，bluedot.is.autonavi.com.gds.alibabadns.com',
     content, 
     flags=re.IGNORECASE
 )
