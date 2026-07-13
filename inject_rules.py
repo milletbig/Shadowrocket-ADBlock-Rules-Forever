@@ -72,7 +72,7 @@ DOMAIN,www-cdn.icloud.com.akadns.net,PROXY
 DOMAIN-SUFFIX,aaplimg.com,PROXY
 DOMAIN-SUFFIX,apple-cloudkit.com,PROXY
 DOMAIN-SUFFIX,apple.co,PROXY
-# DOMAIN-SUFFIX,apple.com,PROXY
+DOMAIN-SUFFIX,apple.com,PROXY
 DOMAIN-SUFFIX,apple.news,PROXY
 DOMAIN-SUFFIX,appstore.com,PROXY
 DOMAIN-SUFFIX,cdn-apple.com,PROXY
@@ -158,7 +158,7 @@ content = re.sub(r',[ \t]*direct[ \t]*(?=\r|\n|$|#)', r',DIRECT', content, flags
 # ==========================================
 content = re.sub(
     r'(hostname\s*=\s*.*?\*\.googlevideo\.com)', 
-    r'\1,*.ddgksf2013.top,hub.kelee.one,gs-loc.apple.com,gs-loc-cn.apple.com,bluedot.is.autonavi.com,bluedot.is.autonavi.com.gds.alibabadns.com',
+    r'\1,*.ddgksf2013.top,hub.kelee.one,gs-loc.apple.com,gs-loc-cn.apple.com',
     content, 
     flags=re.IGNORECASE
 )
