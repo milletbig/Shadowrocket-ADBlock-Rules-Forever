@@ -61,12 +61,14 @@ DOMAIN-SUFFIX,push.apple.com,PROXY
 DOMAIN-SUFFIX,gateway.push.apple.com,PROXY
 DOMAIN-SUFFIX,api.push.apple.com,PROXY
 DOMAIN-SUFFIX,sandbox.push.apple.com,PROXY
+
 # Apple Intelligence / Siri / Relay
 DOMAIN-SUFFIX,apple-relay.akamaized.net,PROXY
 DOMAIN-SUFFIX,apple-relay.apple.com,PROXY
 DOMAIN-SUFFIX,apple-relay.cloudflare.com,PROXY
 DOMAIN-SUFFIX,apple-relay.fastly-edge.com,PROXY
 DOMAIN-SUFFIX,apple-relay.mask.apple-dns.net,PROXY
+
 # Apple services that may need PROXY
 DOMAIN,www-cdn.icloud.com.akadns.net,PROXY
 DOMAIN-SUFFIX,aaplimg.com,PROXY
@@ -158,7 +160,7 @@ content = re.sub(r',[ \t]*direct[ \t]*(?=\r|\n|$|#)', r',DIRECT', content, flags
 # ==========================================
 content = re.sub(
     r'(hostname\s*=\s*.*?\*\.googlevideo\.com)', 
-    r'\1,*.ddgksf2013.top,hub.kelee.one,gs-loc.apple.com,gs-loc-cn.apple.com',
+    r'\1,*.ddgksf2013.top,hub.kelee.one',
     content, 
     flags=re.IGNORECASE
 )
