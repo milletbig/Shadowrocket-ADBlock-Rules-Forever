@@ -5,7 +5,7 @@ import urllib.parse
 import json
 
 # 版本信息
-VERSION = "1.3.000"
+VERSION = "1.4.000"
 file_path = "sr_top500_banlist.conf"
 
 # 自定义规则块
@@ -50,6 +50,15 @@ DOMAIN-SUFFIX,icloud-apple.cn,DIRECT
 DOMAIN-SUFFIX,gs-loc-cn.apple.com,DIRECT
 DOMAIN,captive.apple.com,DIRECT
 
+# ==========================================
+# Apple Siri / 语音助手直连 —— 必须前置于 AppleProxy RULE-SET
+# 上游 AppleProxy.list 含 api-glb-sea.smoot.apple.com、gspe1-ssl.ls.apple.com（PROXY），
+# 若后置会被规则集抢占。
+# ==========================================
+DOMAIN-SUFFIX,guzzoni.apple.com,DIRECT
+DOMAIN-SUFFIX,smoot.apple.com,DIRECT
+DOMAIN-SUFFIX,siri.apple.com,DIRECT
+
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/AppleProxy/AppleProxy.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/iCloud/iCloud.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/iCloudPrivateRelay/iCloudPrivateRelay.list,PROXY
@@ -92,7 +101,7 @@ DOMAIN-SUFFIX,gateway.push.apple.com,DIRECT
 DOMAIN-SUFFIX,api.push.apple.com,DIRECT
 DOMAIN-SUFFIX,sandbox.push.apple.com,DIRECT
 
-# Apple Intelligence / Siri / Relay
+# Apple Relay（Private Cloud Compute）—— 保持代理，不做直连
 DOMAIN-SUFFIX,apple-relay.akamaized.net,PROXY
 DOMAIN-SUFFIX,apple-relay.apple.com,PROXY
 DOMAIN-SUFFIX,apple-relay.cloudflare.com,PROXY
