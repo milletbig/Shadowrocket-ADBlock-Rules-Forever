@@ -5,7 +5,7 @@ import urllib.parse
 import json
 
 # 版本信息
-VERSION = "1.4.000"
+VERSION = "1.5.000"
 file_path = "sr_top500_banlist.conf"
 
 # 自定义规则块
@@ -86,6 +86,9 @@ DOMAIN-SUFFIX,binance.us,PROXY
 
 # Bitwarden
 DOMAIN-SUFFIX,bitwarden.com,PROXY
+
+# Telegram 媒体 CDN（上游仅有 cdn4/cdn5 精确规则，此处用后缀覆盖 cdn1~cdnN）
+DOMAIN-SUFFIX,cdn-telegram.org,PROXY
 
 # e充电 去广告
 DOMAIN-SUFFIX,flytechtj.com,REJECT
@@ -192,6 +195,24 @@ content = re.sub(r',[ \t]*Proxy[ \t]*(?=\r|\n|$|#)', r',PROXY', content, flags=r
 content = re.sub(r',[ \t]*direct[ \t]*(?=\r|\n|$|#)', r',DIRECT', content, flags=re.IGNORECASE)
 
 # ==========================================
+# 2.6 去除完全重复的规则行（保留首次出现的位置与策略）
+# ==========================================
+# 只处理形如 "TYPE,内容,策略" 的规则行，不触碰 [Section] 段头与 hostname 等配置行。
+rule_line = re.compile(r'^[A-Z][A-Z0-9-]*,')
+seen_rules = set()
+deduped_lines = []
+removed_duplicates = 0
+for line in content.split('\n'):
+    key = line.strip()
+    if rule_line.match(key):
+        if key in seen_rules:
+            removed_duplicates += 1
+            continue
+        seen_rules.add(key)
+    deduped_lines.append(line)
+content = '\n'.join(deduped_lines)
+
+# ==========================================
 # 3. 追加 MITM hostname
 # ==========================================
 content = re.sub(
@@ -204,7 +225,7 @@ content = re.sub(
 with open(file_path, 'w', encoding='utf-8') as f:
     f.write(content)
 
-print(f"版本 {VERSION}: 规则修改、注入及大小写规范化(已修复换行)成功！")
+print(f"版本 {VERSION}: 规则修改、注入、大小写规范化及去重(已删除 {removed_duplicates} 条重复规则)成功！")
 
 # ==========================================
 # 4. 发送 PushDeer 通知
