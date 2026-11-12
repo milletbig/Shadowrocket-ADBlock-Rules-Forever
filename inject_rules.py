@@ -5,7 +5,7 @@ import urllib.parse
 import json
 
 # 版本信息
-VERSION = "1.1.002"
+VERSION = "1.3.000"
 file_path = "sr_top500_banlist.conf"
 
 # 自定义规则块
@@ -15,11 +15,40 @@ custom_rules = """
 # ==========================================
 
 # 拦截 STUN 流量 (防止 WebRTC 真实 IP 泄露)
-# 拦截 STUN 协议的默认常用 UDP 端口 (3478 为标准 STUN，5349 为 TLS STUN)
-DST-PORT,3478,REJECT
-DST-PORT,5349,REJECT
-# 拦截包含 stun 关键词的主流公共探测服务器域名
-DOMAIN-KEYWORD,stun,REJECT
+# 仅拦截已知的公共 STUN 探测服务器域名；
+# 不再按 DST-PORT 3478/5349 全局拦截，也不再使用 DOMAIN-KEYWORD,stun 宽匹配，
+# 避免误伤 FaceTime / 微信语音等依赖 ICE 打洞的正常 UDP 流量。
+DOMAIN-SUFFIX,stun.l.google.com,REJECT
+DOMAIN-SUFFIX,stun1.l.google.com,REJECT
+DOMAIN-SUFFIX,stun2.l.google.com,REJECT
+DOMAIN-SUFFIX,stun3.l.google.com,REJECT
+DOMAIN-SUFFIX,stun4.l.google.com,REJECT
+DOMAIN-SUFFIX,stun.services.mozilla.com,REJECT
+DOMAIN-SUFFIX,stunserver.stunprotocol.org,REJECT
+DOMAIN-SUFFIX,stun.browserleaks.com,REJECT
+DOMAIN-SUFFIX,stun.cloudflare.com,REJECT
+DOMAIN-SUFFIX,global.stun.twilio.com,REJECT
+DOMAIN-SUFFIX,stun.voip.blackberry.com,REJECT
+DOMAIN-SUFFIX,stun.sipgate.net,REJECT
+DOMAIN-SUFFIX,stun.ekiga.net,REJECT
+DOMAIN-SUFFIX,stun.ideasip.com,REJECT
+
+# ==========================================
+# Apple 中国区直连白名单 —— 必须前置于所有 Apple RULE-SET
+# 上游 iCloud.list 同样包含 icloud.com.cn / icloud-content.com.cn 等域名，
+# 且动作为 PROXY；若不前置，国内节点会被规则集抢占并绕行海外出口。
+# ==========================================
+DOMAIN-SUFFIX,apple.com.cn,DIRECT
+DOMAIN-SUFFIX,icloud.com.cn,DIRECT
+DOMAIN-SUFFIX,icloud-content.com.cn,DIRECT
+DOMAIN-SUFFIX,icloud.net.cn,DIRECT
+DOMAIN-SUFFIX,icloud.cn,DIRECT
+DOMAIN-SUFFIX,appleicloud.cn,DIRECT
+DOMAIN-SUFFIX,apple-icloud.cn,DIRECT
+DOMAIN-SUFFIX,icloudapple.cn,DIRECT
+DOMAIN-SUFFIX,icloud-apple.cn,DIRECT
+DOMAIN-SUFFIX,gs-loc-cn.apple.com,DIRECT
+DOMAIN,captive.apple.com,DIRECT
 
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/AppleProxy/AppleProxy.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/iCloud/iCloud.list,PROXY
@@ -31,7 +60,7 @@ RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/hea
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/YouTube/YouTube.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/Notion/Notion.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/TikTok/TikTok.list,PROXY
-RULE-SET,https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/OneDrive/OneDrive.list,PROXY
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/OneDrive/OneDrive.list,PROXY
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Shadowrocket/Binance/Binance.list,DIRECT
 
 # 疑似Binance域名走直连
@@ -42,6 +71,7 @@ DOMAIN-SUFFIX,binancezh.biz,DIRECT
 DOMAIN-SUFFIX,binance-cn.com,DIRECT
 DOMAIN-SUFFIX,binance.com,DIRECT
 DOMAIN-SUFFIX,binancezh.io,DIRECT
+DOMAIN-SUFFIX,binancezh.jp,DIRECT
 # 疑似Binance美国域名走代理
 DOMAIN-SUFFIX,binance.us,PROXY
 
@@ -56,11 +86,11 @@ DOMAIN-SUFFIX,yxyylog.echargenet.com,REJECT
 DOMAIN-SUFFIX,adash-evone.echargenet.com,REJECT
 DOMAIN,pro.bugly.qq.com,REJECT
 
-# Apple Push / APNs
-DOMAIN-SUFFIX,push.apple.com,PROXY
-DOMAIN-SUFFIX,gateway.push.apple.com,PROXY
-DOMAIN-SUFFIX,api.push.apple.com,PROXY
-DOMAIN-SUFFIX,sandbox.push.apple.com,PROXY
+# Apple Push / APNs —— 全部直连，避免代理长连接抖动导致推送/来电延迟
+DOMAIN-SUFFIX,push.apple.com,DIRECT
+DOMAIN-SUFFIX,gateway.push.apple.com,DIRECT
+DOMAIN-SUFFIX,api.push.apple.com,DIRECT
+DOMAIN-SUFFIX,sandbox.push.apple.com,DIRECT
 
 # Apple Intelligence / Siri / Relay
 DOMAIN-SUFFIX,apple-relay.akamaized.net,PROXY
@@ -82,10 +112,6 @@ DOMAIN-SUFFIX,icloud-content.com,PROXY
 DOMAIN-SUFFIX,icloud.com,PROXY
 DOMAIN-SUFFIX,me.com,PROXY
 DOMAIN-SUFFIX,mzstatic.com,PROXY
-# Mainland China Apple services keep direct
-DOMAIN-SUFFIX,apple.com.cn,DIRECT
-DOMAIN-SUFFIX,icloud.com.cn,DIRECT
-DOMAIN,captive.apple.com,DIRECT
 
 # ==========================================
 # 👆👆👆 自定义规则结束 👆👆👆
@@ -101,6 +127,7 @@ domains_to_remove = [
     "binance-cn.com",
     "binance.com",
     "binancezh.io",
+    "binancezh.jp",
     "binance.us",
     "gs-loc-cn.apple.com"
 ]
