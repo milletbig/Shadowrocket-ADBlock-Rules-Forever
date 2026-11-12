@@ -19,7 +19,17 @@ jobs:
       - name: Download latest rules from Upstream
         run: |
           # 直接下载原作者 release 分支的最新的 Raw 文件覆盖本地
-          wget -O sr_top500_banlist.conf https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/release/sr_top500_banlist.conf
+          # 记录拉取结果与耗时，供注入脚本生成结构化通知
+          START_MS=$(date +%s%3N)
+          if wget -q -O sr_top500_banlist.conf https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/release/sr_top500_banlist.conf; then
+            echo "UPSTREAM_FETCH_STATUS=success" >> "$GITHUB_ENV"
+          else
+            echo "UPSTREAM_FETCH_STATUS=failed" >> "$GITHUB_ENV"
+            # 删除可能残留的空文件/半成品，交由脚本识别并发送失败通知
+            rm -f sr_top500_banlist.conf
+          fi
+          END_MS=$(date +%s%3N)
+          echo "UPSTREAM_FETCH_DURATION_MS=$((END_MS - START_MS))" >> "$GITHUB_ENV"
 
       - name: Set up Python
         uses: actions/setup-python@v6

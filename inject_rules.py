@@ -1,12 +1,28 @@
 import re
 import os
+import sys
+import time
 import urllib.request
 import urllib.parse
 import json
+from datetime import datetime, timedelta, timezone
 
 # 版本信息
 VERSION = "1.5.000"
 file_path = "sr_top500_banlist.conf"
+
+# 上游资源地址（与 workflow 中的下载地址保持一致，可用于通知溯源）
+UPSTREAM_URL = os.environ.get(
+    "UPSTREAM_URL",
+    "https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/release/sr_top500_banlist.conf"
+)
+
+# 规则行匹配（形如 "TYPE,内容,策略"），用于条目统计与去重
+rule_line = re.compile(r'^[A-Z][A-Z0-9-]*,')
+
+# 脚本计时起点与构建时间（固定使用北京时间，精确到分钟）
+START_TIME = time.perf_counter()
+BUILD_TIME = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
 
 # 自定义规则块
 custom_rules = """
@@ -149,26 +165,102 @@ rules_to_remove = [
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/AppleNews/AppleNews.list"
 ]
 
-if not os.path.exists(file_path):
-    print(f"找不到文件: {file_path}")
-    exit(1)
+# ==========================================
+# 0. 通知发送能力（提前定义，失败场景也能告警）
+# ==========================================
+def send_pushdeer(title, desp):
+    pushkey = os.environ.get("PUSHDEER_KEY")
+    if not pushkey:
+        print("未配置 PUSHDEER_KEY 环境变量，跳过发送通知。")
+        return
+
+    url = "https://api2.pushdeer.com/message/push"
+    data = urllib.parse.urlencode({
+        'pushkey': pushkey,
+        'text': title,
+        'desp': desp
+    }).encode('utf-8')
+
+    try:
+        req = urllib.request.Request(url, data=data)
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            if result.get('code') == 0:
+                print("PushDeer 通知发送成功！")
+            else:
+                print(f"PushDeer 通知发送异常: {result}")
+    except Exception as e:
+        print(f"PushDeer 通知发送失败: {e}")
+
+
+def format_fetch_duration():
+    raw_ms = os.environ.get("UPSTREAM_FETCH_DURATION_MS", "").strip()
+    if raw_ms.isdigit():
+        return f"{int(raw_ms) / 1000:.2f} 秒"
+    return "未上报（本地运行）"
+
+
+# 上游拉取状态：优先采用 workflow 上报结果，本地运行时以文件是否就绪为准
+fetch_status_raw = os.environ.get("UPSTREAM_FETCH_STATUS", "").strip().lower()
+if fetch_status_raw in ("success", "ok", "true"):
+    upstream_ok = True
+elif fetch_status_raw in ("failed", "fail", "false", "error"):
+    upstream_ok = False
+else:
+    upstream_ok = None  # 未知，交由文件状态判定
+
+if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+    missing_reason = "上游文件不存在" if not os.path.exists(file_path) else "上游文件为空（可能下载失败）"
+    fail_desp = "\n".join([
+        f"**🕒 构建时间**：{BUILD_TIME}（北京时间）",
+        "",
+        "**📥 一、上游资源拉取**",
+        f"- 拉取状态：❌ **失败**",
+        f"- 失败原因：{missing_reason}",
+        f"- 条目总数：**0 条**",
+        f"- 拉取耗时：**{format_fetch_duration()}**",
+        f"- 上游来源：{UPSTREAM_URL}",
+        "",
+        "**🧩 二、规则注入结果**",
+        "- 注入成功：**0 条**",
+        "- 注入失败：**未执行**",
+        "- 说明：上游文件不可用，注入流程已中止。",
+        "",
+        "**📦 三、构建产物与耗时**",
+        f"- 脚本总耗时：**{time.perf_counter() - START_TIME:.2f} 秒**",
+        "- 输出文件：未生成",
+        f"- 脚本版本：v{VERSION}",
+    ])
+    print(f"{missing_reason}: {file_path}")
+    send_pushdeer(f"❌ Shadowrocket 规则同步失败 (v{VERSION}) · {BUILD_TIME}", fail_desp)
+    sys.exit(1)
 
 with open(file_path, 'r', encoding='utf-8') as f:
     content = f.read()
+
+# 上游拉取状态兜底：文件可读即视为拉取成功
+if upstream_ok is None:
+    upstream_ok = True
+
+# 上游原始条目数（规则行）
+upstream_rule_count = sum(1 for line in content.split('\n') if rule_line.match(line.strip()))
 
 # ==========================================
 # 1. 过滤掉旧的规则（Binance 和 AppleNews）
 # ==========================================
 lines = content.split('\n')
 filtered_lines = []
+removed_upstream_count = 0
 for line in lines:
     if not line.strip().startswith('#'):
         # 检查是否命中要删除的 Binance 域名
         if any(f",{domain}," in line for domain in domains_to_remove):
+            removed_upstream_count += 1
             continue  
             
         # 检查是否命中要删除的具体 RULE-SET 链接
         if any(rule in line for rule in rules_to_remove):
+            removed_upstream_count += 1
             continue  
             
     filtered_lines.append(line)
@@ -180,11 +272,21 @@ content = '\n'.join(filtered_lines)
 # ==========================================
 anchor = r'(\[Rule\]\s*#\s*# 黑名单中包含了 GFWList 中定义的无法访问的网站，剩下的网站直连。\s*# 未包含广告过滤\s*#)'
 
-if re.search(anchor, content):
+anchor_matched = bool(re.search(anchor, content))
+if anchor_matched:
     content = re.sub(anchor, r'\1\n' + custom_rules.strip() + '\n', content, count=1)
 else:
     # 兜底防错
     content = content.replace('[Rule]', '[Rule]\n' + custom_rules.strip() + '\n', 1)
+
+# 校验自定义规则注入结果（按单条规则逐一核对是否存在）
+injected_rule_lines = [
+    line.strip() for line in custom_rules.strip().split('\n')
+    if line.strip() and not line.strip().startswith('#')
+]
+content_line_set = {line.strip() for line in content.split('\n')}
+inject_failed = [line for line in injected_rule_lines if line not in content_line_set]
+inject_ok = len(injected_rule_lines) - len(inject_failed)
 
 # ==========================================
 # 2.5 统一策略动作大小写
@@ -198,7 +300,7 @@ content = re.sub(r',[ \t]*direct[ \t]*(?=\r|\n|$|#)', r',DIRECT', content, flags
 # 2.6 去除完全重复的规则行（保留首次出现的位置与策略）
 # ==========================================
 # 只处理形如 "TYPE,内容,策略" 的规则行，不触碰 [Section] 段头与 hostname 等配置行。
-rule_line = re.compile(r'^[A-Z][A-Z0-9-]*,')
+pre_dedup_rule_count = sum(1 for line in content.split('\n') if rule_line.match(line.strip()))
 seen_rules = set()
 deduped_lines = []
 removed_duplicates = 0
@@ -211,6 +313,7 @@ for line in content.split('\n'):
         seen_rules.add(key)
     deduped_lines.append(line)
 content = '\n'.join(deduped_lines)
+post_dedup_rule_count = len(seen_rules)
 
 # ==========================================
 # 3. 追加 MITM hostname
@@ -228,32 +331,47 @@ with open(file_path, 'w', encoding='utf-8') as f:
 print(f"版本 {VERSION}: 规则修改、注入、大小写规范化及去重(已删除 {removed_duplicates} 条重复规则)成功！")
 
 # ==========================================
-# 4. 发送 PushDeer 通知
+# 4. 汇总构建结果并发送 PushDeer 通知
 # ==========================================
-def send_pushdeer():
-    pushkey = os.environ.get("PUSHDEER_KEY")
-    if not pushkey:
-        print("未配置 PUSHDEER_KEY 环境变量，跳过发送通知。")
-        return
-    
-    url = "https://api2.pushdeer.com/message/push"
-    # 通知标题和内容
-    data = urllib.parse.urlencode({
-        'pushkey': pushkey,
-        'text': f'✅ Shadowrocket 规则同步成功 (v{VERSION})',
-        'desp': '上游规则已拉取，且自定义规则已注入。'
-    }).encode('utf-8')
-    
-    try:
-        req = urllib.request.Request(url, data=data)
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            if result.get('code') == 0:
-                print("PushDeer 通知发送成功！")
-            else:
-                print(f"PushDeer 通知发送异常: {result}")
-    except Exception as e:
-        print(f"PushDeer 通知发送失败: {e}")
+total_seconds = time.perf_counter() - START_TIME
+abs_file_path = os.path.abspath(file_path)
+file_size = os.path.getsize(file_path)
+overall_ok = bool(upstream_ok) and not inject_failed
 
-# 执行发送
-send_pushdeer()
+upstream_status_text = "✅ 成功" if upstream_ok else "❌ 失败"
+anchor_text = "✅ 精确命中" if anchor_matched else "⚠️ 未命中，已使用兜底插入"
+if inject_failed:
+    fail_detail_line = "- 失败明细：\n" + "\n".join(f"  - {item}" for item in inject_failed)
+else:
+    fail_detail_line = "- 失败明细：无"
+
+desp = "\n".join([
+    f"**🕒 构建时间**：{BUILD_TIME}（北京时间）",
+    "",
+    "**📥 一、上游资源拉取**",
+    f"- 拉取状态：{upstream_status_text}",
+    f"- 条目总数：**{upstream_rule_count:,} 条**",
+    f"- 拉取耗时：**{format_fetch_duration()}**",
+    f"- 上游来源：{UPSTREAM_URL}",
+    "",
+    "**🧩 二、规则注入结果**",
+    f"- 注入成功：**{inject_ok} 条**",
+    f"- 注入失败：**{len(inject_failed)} 条**",
+    fail_detail_line,
+    f"- 注入锚点：{anchor_text}",
+    f"- 上游精准剔除：**{removed_upstream_count} 条**",
+    "",
+    "**🧹 三、数据去重统计**",
+    f"- 原始条目：**{pre_dedup_rule_count:,} 条**",
+    f"- 去重后条目：**{post_dedup_rule_count:,} 条**",
+    f"- 过滤重复条目：**{removed_duplicates:,} 条**",
+    "",
+    "**📦 四、构建产物与耗时**",
+    f"- 脚本总耗时：**{total_seconds:.2f} 秒**",
+    f"- 输出文件：{abs_file_path}",
+    f"- 文件大小：**{file_size:,} 字节**",
+    f"- 脚本版本：v{VERSION}",
+])
+
+title_prefix = "✅ Shadowrocket 规则同步成功" if overall_ok else "⚠️ Shadowrocket 规则同步存在异常"
+send_pushdeer(f"{title_prefix} (v{VERSION}) · {BUILD_TIME}", desp)
